@@ -1,0 +1,6 @@
+@ms_inventary_HostAddress = http://localhost:5123
+
+GET {{ms_inventary_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

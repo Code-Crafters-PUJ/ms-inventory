@@ -1,0 +1,21 @@
+POST   https://localhost:7071/api/Suppliers/
+Content-Type: application/json
+
+{
+  "name": "string",
+  "address": "string",
+  "phone": "string",
+  "email": "string",
+  "urlPage": "string",
+  "supplierTypeId": 1,
+  "supplierType": {
+    "supplierTypeId": 5,
+    "name": "string"
+  },
+  "serviceTypeId": 5,
+  "serviceType": {
+    "serviceTypeId": 5,
+    "name": "string"
+  }
+}
+
