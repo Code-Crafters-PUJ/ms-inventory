@@ -1,4 +1,4 @@
-POST   https://localhost:7071/api/Suppliers/
+GET   https://localhost:7071/api/Suppliers/
 Content-Type: application/json
 
 {
@@ -9,13 +9,13 @@ Content-Type: application/json
   "urlPage": "string",
   "supplierTypeId": 1,
   "supplierType": {
-    "supplierTypeId": 5,
-    "name": "string"
+    "supplierTypeId": 1,
+    "name": "Persona"
   },
-  "serviceTypeId": 5,
+  "serviceTypeId": 1,
   "serviceType": {
-    "serviceTypeId": 5,
-    "name": "string"
+    "serviceTypeId": 1,
+    "name": "Servicio1"
   }
 }
 

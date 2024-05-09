@@ -64,21 +64,46 @@ public class SuppliersController : ControllerBase
         return NoContent();
     }
 
-    // POST: api/Suppliers 
-    [HttpPost]
-    public async Task<ActionResult<Supplier>> PostSupplier(Supplier supplier)
+// POST: api/Suppliers 
+[HttpPost]
+public async Task<ActionResult<Supplier>> PostSupplier(Supplier supplier)
+{
+    // Check if SupplierType already exists, if not, add it
+    var existingSupplierType = _context.SupplierType.FirstOrDefault(st => st.Name == supplier.SupplierType.Name);
+    if (existingSupplierType == null)
     {
-        do
-        {
-            // Generate a random, unique SupplierId
-            supplier.SupplierId = GenerateUniqueSupplierId();
-        } while (_context.Supplier.Any(e => e.SupplierId == supplier.SupplierId));
-
-        _context.Supplier.Add(supplier);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction("GetSupplier", new { id = supplier.SupplierId }, supplier);
+        supplier.SupplierType = null; // Remove SupplierType to prevent creation
     }
+    else
+    {
+        supplier.SupplierTypeId = existingSupplierType.SupplierTypeId;
+        supplier.SupplierType = existingSupplierType;
+    }
+
+    // Check if ServiceType already exists, if not, add it
+    var existingServiceType = _context.ServiceType.FirstOrDefault(st => st.Name == supplier.ServiceType.Name);
+    if (existingServiceType == null)
+    {
+        supplier.ServiceType = null; // Remove ServiceType to prevent creation
+    }
+    else
+    {
+        supplier.ServiceTypeId = existingServiceType.ServiceTypeId;
+        supplier.ServiceType = existingServiceType;
+    }
+
+    do
+    {
+        // Generate a random, unique SupplierId
+        supplier.SupplierId = GenerateUniqueSupplierId();
+    } while (_context.Supplier.Any(e => e.SupplierId == supplier.SupplierId));
+
+    _context.Supplier.Add(supplier);
+    await _context.SaveChangesAsync();
+
+    return CreatedAtAction("GetSupplier", new { id = supplier.SupplierId }, supplier);
+}
+
 
     // DELETE: api/Suppliers/5
     [HttpDelete("{id}")]
