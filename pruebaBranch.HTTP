@@ -1,0 +1,7 @@
+POST   https://localhost:7071/category
+Content-Type: application/json
+
+{
+  "categoryId": 0,
+  "name": "alimento"
+}

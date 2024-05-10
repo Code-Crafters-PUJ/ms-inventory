@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 public class Branch
 {
+
     [Key]
     public int BranchId { get; set; }
 
@@ -15,8 +16,11 @@ public class Branch
 
     public int CompanyId { get; set; }
 
-    [ForeignKey("CompanyId")]
-    public Company? Company { get; set; }
+  
+    public static implicit operator Branch(List<Branch> v)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 
@@ -173,5 +177,6 @@ public class Company
 
     [StringLength(45)]
     public string ?employeeNumber { get; set; }
+
 
 }
