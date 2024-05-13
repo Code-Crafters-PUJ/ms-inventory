@@ -156,12 +156,29 @@ public class ProductHasSupplier
     [Key]
     [Column(Order = 3)]
     public DateTime PurchaseDate { get; set; }
+    [Key]
+    [Column(Order = 4)]
+    public DateTime costPrice { get; set; }
+
+        [Key]
+    [Column(Order = 5)]
+    public DateTime quantity { get; set; }
+
+    [Key]
+    [Column(Order = 6)]
+    public DateTime OrderId { get; set; }
+
+    [Key]
+    [Column(Order = 7)]
+    public DateTime BranchId { get; set; }
 
     [ForeignKey("ProductId")]
     public Product ?Product { get; set; }
 
     [ForeignKey("SupplierId")]
     public Supplier ?Supplier { get; set; }
+
+
 }
 
 // Company.cs

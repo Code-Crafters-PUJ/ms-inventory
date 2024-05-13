@@ -321,4 +321,21 @@ public async Task<ActionResult<Category>> PostCategory(Category category)
     return CreatedAtAction(nameof(PostCompany), new { id = category.CategoryId }, category);
 }
 
+
+    // GET api/orders/generateOrderId
+    [HttpGet("generateOrderId")]
+    public IActionResult GenerateOrderId()
+    {
+        var orderId = GenerateUniqueOrderId();
+        return Ok(new { OrderId = orderId });
+    }
+
+
+    private string GenerateUniqueOrderId()
+    {
+        var orderId = Guid.NewGuid().ToString(); 
+        return orderId;
+    }
+
+ 
 }
