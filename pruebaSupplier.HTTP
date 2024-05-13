@@ -1,13 +1,15 @@
-GET   https://localhost:7071/api/Suppliers/
+PUT   https://localhost:7071/api/Suppliers/1/2127332049
 Content-Type: application/json
 
 {
-  "name": "string",
+  "supplierId": 2127332049,
+  "name": "hola",
   "address": "string",
   "phone": "string",
   "email": "string",
   "urlPage": "string",
   "supplierTypeId": 1,
+  "companyId": 1,
   "supplierType": {
     "supplierTypeId": 1,
     "name": "Persona"

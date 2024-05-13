@@ -1,1 +1,2 @@
-DELETE  https://localhost:7071/api/company/1/products/7
+GET  https://localhost:7071/api/Suppliers/company/1
+

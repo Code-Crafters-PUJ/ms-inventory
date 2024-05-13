@@ -82,6 +82,8 @@ public class Supplier
     [StringLength(45)]
     public string ?UrlPage { get; set; }
 
+    public int CompanyId { get; set; }
+
     public int SupplierTypeId { get; set; }
 
     [ForeignKey("SupplierTypeId")]
