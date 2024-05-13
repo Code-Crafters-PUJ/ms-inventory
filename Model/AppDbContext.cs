@@ -5,8 +5,8 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Branch> Branch { get; set; }
-    public DbSet<Branch> Product { get; set; }
-    public DbSet<Branch> Category { get; set; }
+    public DbSet<Product> Product { get; set; }
+    public DbSet<Category> Category { get; set; }
 
     public DbSet<Supplier> Supplier { get; set; }
 
