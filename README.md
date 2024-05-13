@@ -14,6 +14,10 @@ dotnet add package Microsoft.EntityFrameworkCore.Tools
 dotnet add package RabbitMQ.Client
 ```
 
+```
+dotnet add package Microsoft.Extensions.Configuration.EnvironmentVariables
+```
+
 3. Generar la base de datos y su réplica.
 ```
 docker-compose up -d
@@ -22,6 +26,10 @@ docker-compose up -d
 4. Agregar la base de datos.
 ```
 dotnet ef database update
+```
+
+```
+dotnet add package DotNetEnv
 ```
 
 5. Ejecutar el microservicio.
