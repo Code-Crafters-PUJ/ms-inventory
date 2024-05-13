@@ -1,0 +1,7 @@
+GET   https://localhost:7071/api/Company/generateOrderId
+Content-Type: application/json
+
+{
+  "categoryId": 0,
+  "name": "alimento"
+}

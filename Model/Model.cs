@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 public class Branch
 {
+
     [Key]
     public int BranchId { get; set; }
 
@@ -15,8 +16,11 @@ public class Branch
 
     public int CompanyId { get; set; }
 
-    [ForeignKey("CompanyId")]
-    public Company? Company { get; set; }
+  
+    public static implicit operator Branch(List<Branch> v)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 
@@ -77,6 +81,8 @@ public class Supplier
 
     [StringLength(45)]
     public string ?UrlPage { get; set; }
+
+    public int CompanyId { get; set; }
 
     public int SupplierTypeId { get; set; }
 
@@ -150,12 +156,29 @@ public class ProductHasSupplier
     [Key]
     [Column(Order = 3)]
     public DateTime PurchaseDate { get; set; }
+    [Key]
+    [Column(Order = 4)]
+    public DateTime costPrice { get; set; }
+
+        [Key]
+    [Column(Order = 5)]
+    public DateTime quantity { get; set; }
+
+    [Key]
+    [Column(Order = 6)]
+    public DateTime OrderId { get; set; }
+
+    [Key]
+    [Column(Order = 7)]
+    public DateTime BranchId { get; set; }
 
     [ForeignKey("ProductId")]
     public Product ?Product { get; set; }
 
     [ForeignKey("SupplierId")]
     public Supplier ?Supplier { get; set; }
+
+
 }
 
 // Company.cs
@@ -173,5 +196,6 @@ public class Company
 
     [StringLength(45)]
     public string ?employeeNumber { get; set; }
+
 
 }

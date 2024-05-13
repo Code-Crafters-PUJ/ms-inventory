@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ms_inventary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240510001758_prueba")]
+    partial class prueba
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,6 +99,9 @@ namespace ms_inventary.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CompanyId"));
 
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("NIT")
                         .IsRequired()
                         .HasMaxLength(45)
@@ -110,6 +116,8 @@ namespace ms_inventary.Migrations
                         .HasColumnType("character varying(45)");
 
                     b.HasKey("CompanyId");
+
+                    b.HasIndex("BranchId");
 
                     b.ToTable("Company");
                 });
@@ -198,9 +206,6 @@ namespace ms_inventary.Migrations
                         .HasMaxLength(45)
                         .HasColumnType("character varying(45)");
 
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Email")
                         .HasMaxLength(45)
                         .HasColumnType("character varying(45)");
@@ -225,8 +230,6 @@ namespace ms_inventary.Migrations
                         .HasColumnType("character varying(45)");
 
                     b.HasKey("SupplierId");
-
-                    b.HasIndex("CompanyId");
 
                     b.HasIndex("ServiceTypeId");
 
@@ -272,6 +275,15 @@ namespace ms_inventary.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Company", b =>
+                {
+                    b.HasOne("Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.Navigation("Branch");
+                });
+
             modelBuilder.Entity("Product", b =>
                 {
                     b.HasOne("Category", "Category")
@@ -304,12 +316,6 @@ namespace ms_inventary.Migrations
 
             modelBuilder.Entity("Supplier", b =>
                 {
-                    b.HasOne("Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ServiceType", "ServiceType")
                         .WithMany()
                         .HasForeignKey("ServiceTypeId")
@@ -321,8 +327,6 @@ namespace ms_inventary.Migrations
                         .HasForeignKey("SupplierTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Company");
 
                     b.Navigation("ServiceType");
 
