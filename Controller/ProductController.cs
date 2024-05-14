@@ -103,6 +103,18 @@ public class CompanyController : ControllerBase
                 await _context.SaveChangesAsync();
                 transaction.Commit();
 
+                var productDTO = new ProductDTO
+                {
+                    id = product.ProductId,
+                    name = product.Name,
+                    description = product.Description,
+                    salePrice = product.SalePrice,
+                    categoryId = product.CategoryId
+                };
+
+                ProductCreateUpdateProducer publisher = new ProductCreateUpdateProducer();
+                await publisher.PublishMessage(productDTO);
+
                 return Ok(product);
             }
             catch (Exception ex)
@@ -141,26 +153,30 @@ public async Task<ActionResult<IEnumerable<BranchHasProduct>>> GetBranchesByProd
 [HttpDelete("{companyId}/products/{productId}")]
 public IActionResult DeleteProduct(int companyId, int productId)
 {
-
-#pragma warning disable CS8602 
-        var branchProductRelations = _context.BranchHasProduct
+    List<BranchHasProduct> deletedBranchProducts;
+    var branchProductRelations = _context.BranchHasProduct
         .Where(bhp => bhp.ProductId == productId && bhp.Branch.CompanyId == companyId)
         .ToList();
-#pragma warning restore CS8602 
 
-        if (branchProductRelations == null || branchProductRelations.Count == 0)
+    if (branchProductRelations == null || branchProductRelations.Count == 0)
     {
         return NotFound($"No se encontraron relaciones del producto con el ID {productId} para la compañía con el ID {companyId}");
     }
 
+    deletedBranchProducts = branchProductRelations.ToList();
 
     _context.BranchHasProduct.RemoveRange(branchProductRelations);
-
-
     _context.SaveChanges();
-
+    var producer = new BranchProductDeleteProducer();
+    foreach (var branchProduct in deletedBranchProducts)
+    {
+        producer.PublishMessage(branchProduct.BranchId, branchProduct.ProductId);
+    }
     return NoContent();
 }
+
+
+
 
 
 // PUT: api/company/1/products/8
@@ -228,6 +244,18 @@ public async Task<IActionResult> UpdateProductForCompany(int companyId, int prod
 
             await _context.SaveChangesAsync();
             transaction.Commit();
+
+        var productDTO = new ProductDTO
+        {
+            id = product.ProductId,
+            name = product.Name,
+            description = product.Description,
+            salePrice = product.SalePrice,
+            categoryId = product.CategoryId
+        };
+
+        ProductCreateUpdateProducer publisher = new ProductCreateUpdateProducer();
+        await publisher.PublishMessage(productDTO);
 
             return Ok(product);
         }
