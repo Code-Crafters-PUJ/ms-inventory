@@ -1,342 +1,321 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-
 [Route("api/[controller]")]
 [ApiController]
-public class CompanyController : ControllerBase
+public class ProductController : ControllerBase
 {
     private readonly AppDbContext _context;
 
-    public CompanyController(AppDbContext context)
+    public ProductController(AppDbContext context)
     {
         _context = context;
     }
 
-    // GET: api/company/1/branches
-    //Esta solicitud permite obtener todas las sucursales de una compañía por su ID. Devuelve un JSON que contiene la lista de sucursales.
-    [HttpGet("{companyId}/branches")]
-    public async Task<ActionResult<IEnumerable<Branch>>> GetBranchesByCompanyId(int companyId)
-    {
+ [HttpGet("branches/company/{id}")]
+public async Task<IActionResult> GetBranchesByCompanyId(int id)
+{
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
         var branches = await _context.Branch
-            .Where(b => b.CompanyId == companyId)
-            .ToListAsync();
-
-        if (branches == null || branches.Count == 0)
+        .Where(b => b.CompanyId == id)
+        .Select(b => new 
         {
-            return NotFound();
-        }
-
-        return branches;
-    }
-
-    // GET: api/company/1/branches/names
-    //Esta solicitud permite obtener los nombres de todas las sucursales de una compañía por su ID. Devuelve un JSON que contiene una lista de nombres de sucursales.
-    [HttpGet("{companyId}/branches/names")]
-    public async Task<ActionResult<IEnumerable<string>>> GetBranchNamesByCompanyId(int companyId)
-    {
-        var branchNames = await _context.Branch
-            .Where(b => b.CompanyId == companyId)
-            .Select(b => b.Name)
-            .ToListAsync();
-
-        if (branchNames == null || branchNames.Count == 0)
-        {
-            return NotFound();
-        }
-
-#pragma warning disable CS8619 
-        return branchNames;
-#pragma warning restore CS8619 
-    }
-
-// POST: api/company/1/products 
-//Esta solicitud permite crear un nuevo producto para una compañía específica. Se debe enviar los detalles del nuevo producto en el cuerpo de la solicitud.
-[HttpPost("company/{companyId}/products")]
-    public async Task<IActionResult> CreateProductForCompany(int companyId, [FromBody] Product productDto)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-
-        var branches = await _context.Branch
-            .Where(b => b.CompanyId == companyId)
-            .ToListAsync();
+            id = b.BranchId,
+            name = b.Name,
+            enabled = b.Enabled,
+            products = b.BranchHasProducts.Select(bp => new 
+            {
+                product = new 
+                {
+                    id = bp.Product.ProductId,
+                    name = bp.Product.Name,
+                    description = bp.Product.Description,
+                    category = bp.Product.Category.Name,
+                    sellPrice = bp.Product.SalePrice
+                },
+                quantity = bp.Quantity,
+                discount = bp.Discount
+            })
+        }).ToListAsync();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
         if (branches == null || !branches.Any())
-        {
-            return NotFound($"No se encontraron sucursales para la compañía con el ID {companyId}");
-        }
+        return Ok(new List<object>());
 
-        using (var transaction = _context.Database.BeginTransaction())
-        {
-            try
-            {
-                var product = new Product
-                {
-                    Name = productDto.Name,
-                    Description = productDto.Description,
-                    CostPrice = productDto.CostPrice,
-                    SalePrice = productDto.SalePrice,
-                    CategoryId = productDto.CategoryId
-                };
-
-                _context.Product.Add(product);
-                await _context.SaveChangesAsync();
-
-
-                foreach (var branch in branches)
-                {
-                    var branchHasProduct = new BranchHasProduct
-                    {
-                        BranchId = branch.BranchId,
-                        ProductId = product.ProductId,
-                        Quantity = 0, 
-                        Discount = 0
-                    };
-
-                    _context.BranchHasProduct.Add(branchHasProduct);
-                }
-
-                await _context.SaveChangesAsync();
-                transaction.Commit();
-
-                return Ok(product);
-            }
-            catch (Exception ex)
-            {
-                transaction.Rollback();
-                return StatusCode(500, $"Error al guardar el producto: {ex.Message}");
-            }
-        }
-    }
-
-
-// GET: api/company/1/products/6/branches
-// Esta solicitud permite obtener todas las sucursales relacionadas con un producto específico de una compañía. Se devuelve un JSON que contiene la lista de sucursales con información relevante sobre la relación del producto con cada sucursal.
-[HttpGet("{companyId}/products/{productId}/branches")]
-public async Task<ActionResult<IEnumerable<BranchHasProduct>>> GetBranchesByProductId(int companyId, int productId)
-{
-#pragma warning disable CS8602 
-        var branchesWithProduct = await _context.BranchHasProduct
-        .Include(bhp => bhp.Branch)
-        .Include(bhp => bhp.Product)
-        .Where(bhp => bhp.ProductId == productId && bhp.Branch.CompanyId == companyId)
-        .ToListAsync();
-#pragma warning restore CS8602 
-
-        if (branchesWithProduct == null || branchesWithProduct.Count == 0)
-    {
-        return NotFound();
-    }
-
-    return branchesWithProduct;
+    return Ok(branches);
 }
 
 
-// DELETE: api/company/1/products/6
-// Esta solicitud permite eliminar un producto específico de una compañía. Se debe enviar el ID del producto en la URL de la solicitud.
-[HttpDelete("{companyId}/products/{productId}")]
-public IActionResult DeleteProduct(int companyId, int productId)
+ [HttpGet("branches/names/company/{id}")]
+public async Task<IActionResult> GetBranchNamesByCompanyId(int id)
 {
+    var branchNames = await _context.Branch
+        .Where(b => b.CompanyId == id)
+        .Select(b => new { name = b.Name })
+        .ToListAsync();
 
-#pragma warning disable CS8602 
-        var branchProductRelations = _context.BranchHasProduct
-        .Where(bhp => bhp.ProductId == productId && bhp.Branch.CompanyId == companyId)
-        .ToList();
-#pragma warning restore CS8602 
+    if (branchNames == null || !branchNames.Any())
+        return Ok(new List<object>());
 
-        if (branchProductRelations == null || branchProductRelations.Count == 0)
+    return Ok(branchNames);
+}
+
+
+ [HttpPost("products/company/{id}")]
+public async Task<IActionResult> CreateProductForCompany(int id, [FromBody] ProductDTO productDto)
+{
+    if (productDto == null)
+        return BadRequest("Unable to add product");
+
+    var category = await _context.Category.FirstOrDefaultAsync(c => c.Name == productDto.Category);
+    if (category == null)
+        return BadRequest("Invalid category");
+
+    var product = new Product
     {
-        return NotFound($"No se encontraron relaciones del producto con el ID {productId} para la compañía con el ID {companyId}");
+        Name = productDto.Name,
+        Description = productDto.Description,
+        CostPrice = productDto.CostPrice,
+        SalePrice = productDto.SalePrice,
+        CategoryId = category.CategoryId
+    };
+
+    _context.Product.Add(product);
+    await _context.SaveChangesAsync();
+
+    foreach (var branchDto in productDto.Branches)
+    {
+        var branch = await _context.Branch.FirstOrDefaultAsync(b => b.Name == branchDto.BranchName && b.CompanyId == id);
+        if (branch == null)
+            return BadRequest($"Invalid branch name: {branchDto.BranchName}");
+
+        var branchProduct = new BranchHasProduct
+        {
+            BranchId = branch.BranchId,
+            ProductId = product.ProductId,
+            Quantity = branchDto.Quantity,
+            Discount = branchDto.Discount
+        };
+
+        _context.BranchHasProduct.Add(branchProduct);
     }
 
+    await _context.SaveChangesAsync();
 
-    _context.BranchHasProduct.RemoveRange(branchProductRelations);
+    return CreatedAtAction(nameof(GetProductById), new { id = id, productId = product.ProductId }, productDto);
+}
 
+  [HttpGet("products/company/{id}/{productId}/branches")]
+public async Task<IActionResult> GetBranchesByProductId(int id, int productId)
+{
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        var branches = await _context.BranchHasProduct
+        .Where(bp => bp.ProductId == productId && bp.Branch.CompanyId == id)
+        .Select(bp => new 
+        {
+            branchName = bp.Branch.Name,
+            quantity = bp.Quantity,
+            discount = bp.Discount
+        }).ToListAsync();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
-    _context.SaveChanges();
+        if (branches == null || !branches.Any())
+        return Ok(new List<object>());
+
+    return Ok(branches);
+}
+
+ [HttpDelete("products/company/{id}/{productId}")]
+public async Task<IActionResult> DeleteProduct(int id, int productId)
+{
+    var product = await _context.Product.FindAsync(productId);
+    if (product == null)
+        return NotFound("Product not found");
+
+    _context.Product.Remove(product);
+    await _context.SaveChangesAsync();
 
     return NoContent();
 }
 
-
-// PUT: api/company/1/products/8
-//Esta solicitud permite actualizar un producto existente de una compañía. Se debe enviar los detalles actualizados del producto en el cuerpo de la solicitud.
-[HttpPut("company/{companyId}/products/{productId}")]
-public async Task<IActionResult> UpdateProductForCompany(int companyId, int productId, [FromBody] Product productDto)
+   [HttpPut("products/company/{id}/{productId}")]
+public async Task<IActionResult> UpdateProduct(int id, int productId, [FromBody] ProductDTO productDto)
 {
-    if (!ModelState.IsValid)
-    {
-        return BadRequest(ModelState);
-    }
+    if (productDto == null || productId != productDto.Id)
+        return BadRequest("Invalid ID supplied or Bad request");
 
     var product = await _context.Product.FindAsync(productId);
     if (product == null)
+        return NotFound("Product not found");
+
+    var category = await _context.Category.FirstOrDefaultAsync(c => c.Name == productDto.Category);
+    if (category == null)
+        return BadRequest("Invalid category");
+
+    product.Name = productDto.Name;
+    product.Description = productDto.Description;
+    product.CostPrice = productDto.CostPrice;
+    product.SalePrice = productDto.SalePrice;
+    product.CategoryId = category.CategoryId;
+
+    _context.Entry(product).State = EntityState.Modified;
+
+    var existingBranchProducts = await _context.BranchHasProduct.Where(bp => bp.ProductId == productId).ToListAsync();
+    _context.BranchHasProduct.RemoveRange(existingBranchProducts);
+
+    foreach (var branchDto in productDto.Branches)
     {
-        return NotFound($"No se encontró el producto con el ID {productId}");
+        var branch = await _context.Branch.FirstOrDefaultAsync(b => b.Name == branchDto.BranchName && b.CompanyId == id);
+        if (branch == null)
+            return BadRequest($"Invalid branch name: {branchDto.BranchName}");
+
+        var branchProduct = new BranchHasProduct
+        {
+            BranchId = branch.BranchId,
+            ProductId = product.ProductId,
+            Quantity = branchDto.Quantity,
+            Discount = branchDto.Discount
+        };
+
+        _context.BranchHasProduct.Add(branchProduct);
     }
 
-    var branches = await _context.Branch
-        .Where(b => b.CompanyId == companyId)
+    await _context.SaveChangesAsync();
+
+    return Ok("Product updated successfully");
+}
+
+
+   [HttpGet("product/company/{id}/{productId}")]
+public async Task<IActionResult> GetProductById(int id, int productId)
+{
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        var product = await _context.Product
+        .Where(p => p.ProductId == productId)
+        .Select(p => new 
+        {
+            id = p.ProductId,
+            name = p.Name,
+            description = p.Description,
+            category = p.Category.Name,
+            sellPrice = p.SalePrice,
+            branches = p.BranchHasProducts.Select(bp => new 
+            {
+                branchName = bp.Branch.Name,
+                quantity = bp.Quantity,
+                discount = bp.Discount
+            })
+        }).FirstOrDefaultAsync();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
+        if (product == null)
+        return NotFound("Product not found");
+
+        return Ok(new
+    {
+        message = "product retrieved successfully",
+        product
+    });
+}
+
+[HttpGet("products/names/company/{id}")]
+public async Task<IActionResult> GetProductNamesByCompanyId(int id)
+{
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        var productNames = await _context.Product
+        .Where(p => p.BranchHasProducts.Any(bhp => bhp.Branch.CompanyId == id))
+        .Select(p => new { productName = p.Name })
         .ToListAsync();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
-    if (branches == null || !branches.Any())
-    {
-        return NotFound($"No se encontraron sucursales para la compañía con el ID {companyId}");
-    }
+        if (productNames == null || !productNames.Any())
+        return Ok(new List<object>());
 
-    using (var transaction = _context.Database.BeginTransaction())
+    return Ok(new
     {
-        try
+        message = "product retrieved successfully",
+        productNames
+    });
+}
+
+
+
+ [HttpGet("orders/supplier/company/{id}/{supplierId}")]
+public async Task<IActionResult> GetOrdersBySupplier(int id, int supplierId)
+{
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        var orders = await _context.ProductHasSupplier
+        .Where(ps => ps.SupplierId == supplierId &&
+                     ps.Product.BranchHasProducts.Any(bhp => bhp.Branch.CompanyId == id))
+        .Select(ps => new 
         {
-            product.Name = productDto.Name;
-            product.Description = productDto.Description;
-            product.CostPrice = productDto.CostPrice;
-            product.SalePrice = productDto.SalePrice;
-            product.CategoryId = productDto.CategoryId;
-
-            await _context.SaveChangesAsync();
-
-            // Eliminar relaciones de sucursales existentes para este producto
-            var existingRelations = await _context.BranchHasProduct
-                .Where(bhp => bhp.ProductId == productId)
-                .ToListAsync();
-
-            foreach (var relation in existingRelations)
+            productName = ps.Product.Name,
+            supplierName = ps.Supplier.Name,
+            costPrice = ps.CostPrice,
+            purchaseDate = ps.PurchaseDate,
+            branches = ps.Product.BranchHasProducts.Select(bp => new 
             {
-                _context.BranchHasProduct.Remove(relation);
-            }
+                branchName = bp.Branch.Name,
+                quantity = bp.Quantity
+            })
+        }).ToListAsync();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
-            await _context.SaveChangesAsync();
+        if (orders == null || !orders.Any())
+        return Ok(new List<object>());
 
-            // Crear nuevas relaciones de sucursales para este producto
-            foreach (var branch in branches)
-            {
-                var branchHasProduct = new BranchHasProduct
-                {
-                    BranchId = branch.BranchId,
-                    ProductId = productId,
-                    Quantity = 0,
-                    Discount = 0
-                };
+        return Ok(new
+    {
+        message = "order retrieved successfully",
+        orders
+    });
+}
 
-                _context.BranchHasProduct.Add(branchHasProduct);
-            }
 
-            await _context.SaveChangesAsync();
-            transaction.Commit();
+[HttpPost("order/company/{id}")]
+public async Task<IActionResult> AddOrder(int id, [FromBody] OrderDTO orderDto)
+{
+    if (orderDto == null)
+        return BadRequest("Unable to add order");
 
-            return Ok(product);
-        }
-        catch (Exception ex)
+    var supplier = await _context.Supplier.FirstOrDefaultAsync(s => s.Name == orderDto.SupplierName && s.CompanyId == id);
+    if (supplier == null)
+        return BadRequest("Invalid supplier");
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        var product = await _context.Product.FirstOrDefaultAsync(p => p.Name == orderDto.ProductName &&
+                                                                   p.BranchHasProducts.Any(bhp => bhp.Branch.CompanyId == id));
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+        if (product == null)
+        return BadRequest("Invalid product");
+
+    foreach (var branchDto in orderDto.Branches)
+    {
+        var branch = await _context.Branch.FirstOrDefaultAsync(b => b.Name == branchDto.BranchName && b.CompanyId == id);
+        if (branch == null)
+            return BadRequest($"Invalid branch name: {branchDto.BranchName}");
+
+        var order = new ProductHasSupplier
         {
-            transaction.Rollback();
-            return StatusCode(500, $"Error al actualizar el producto: {ex.Message}");
-        }
+            ProductId = product.ProductId,
+            SupplierId = supplier.SupplierId,
+            PurchaseDate = orderDto.PurchaseDate,
+            CostPrice = orderDto.CostPrice,
+            Quantity = branchDto.Quantity,
+            BranchId = branch.BranchId,
+            OrderId = new Random().Next() // Generate a unique order ID or use another method
+        };
+
+        _context.ProductHasSupplier.Add(order);
     }
-}
 
-
-
-    private bool CompanyExists(int id)
-    {
-        return _context.Company.Any(e => e.CompanyId == id);
-    }
-
-// POST: api/company
-//Metodo para insertar una compañia
-[HttpPost]
-public async Task<ActionResult<Company>> PostCompany(Company company)
-{
-    // Agregar la compañía a DbSet Company y guardar en la base de datos
-    _context.Company.Add(company);
     await _context.SaveChangesAsync();
 
-    return CreatedAtAction(nameof(PostCompany), new { id = company.CompanyId }, company);
+    return CreatedAtAction(nameof(GetOrdersBySupplier), new { id = id, supplierId = supplier.SupplierId }, orderDto);
 }
 
-   // POST: api/company/{companyId}/branches
-   //Metodo para insertar una sucursal dentro de una compañia
-    [HttpPost("{companyId}/branches")]
-    public async Task<ActionResult<Branch>> PostBranch(int companyId, Branch branch)
+    private bool ProductExists(int id)
     {
-        var company = await _context.Company.FindAsync(companyId);
-        if (company == null)
-        {
-            return NotFound($"Company with ID {companyId} not found.");
-        }
-
-        branch.CompanyId = companyId;
-
-        
-        _context.Branch.Add(branch);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(PostBranch), new { companyId, branchId = branch.BranchId }, branch);
+        return _context.Product.Any(e => e.ProductId == id);
     }
-
-// GET: api/company
-//Ver todas las compañias
-[HttpGet]
-public async Task<ActionResult<IEnumerable<Company>>> GetCompanies()
-{
-    var companies = await _context.Company.ToListAsync();
-
-    if (companies == null || companies.Count == 0)
-    {
-        return NotFound();
-    }
-
-    return companies;
-}
-
-// DELETE: api/company/{id}
-//Eliminar una compañia
-[HttpDelete("{id}")]
-public async Task<ActionResult<Company>> DeleteCompany(int id)
-{
-    var company = await _context.Company.FindAsync(id);
-    if (company == null)
-    {
-        return NotFound($"Company with ID {id} not found.");
-    }
-
-    _context.Company.Remove(company);
-    await _context.SaveChangesAsync();
-
-    return company;
-}
-
-// POST: api/category
-//Crear una categoria de producto
-[HttpPost ("/category")]
-public async Task<ActionResult<Category>> PostCategory(Category category)
-{
-    _context.Category.Add(category);
-    await _context.SaveChangesAsync();
-
-    return CreatedAtAction(nameof(PostCompany), new { id = category.CategoryId }, category);
-}
-
-
-    // GET api/orders/generateOrderId
-    [HttpGet("generateOrderId")]
-    public IActionResult GenerateOrderId()
-    {
-        var orderId = GenerateUniqueOrderId();
-        return Ok(new { OrderId = orderId });
-    }
-
-
-    private string GenerateUniqueOrderId()
-    {
-        var orderId = Guid.NewGuid().ToString(); 
-        return orderId;
-    }
-
-
-    
 }

@@ -1,217 +1,202 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 [Route("api/[controller]")]
 [ApiController]
-public class SuppliersController : ControllerBase
+public class SupplierController : ControllerBase
 {
     private readonly AppDbContext _context;
 
-    public SuppliersController(AppDbContext context)
+    public SupplierController(AppDbContext context)
     {
         _context = context;
     }
 
-   // GET: api/Suppliers/company/1
-    [HttpGet("company/{companyId}")]
-    public async Task<ActionResult<IEnumerable<Supplier>>> GetSuppliersByCompanyId(int companyId)
+    [HttpGet("company/{id}")]
+    public async Task<IActionResult> GetSuppliersByCompany(int id)
     {
-        var supplier = await _context.Supplier
-            .Where(b => b.CompanyId == companyId)
+        var suppliers = await _context.Supplier
+            .Where(s => s.CompanyId == id)
+            .Include(s => s.SupplierType)
+            .Include(s => s.ServiceType)
             .ToListAsync();
 
-        if (supplier == null || supplier.Count == 0)
+        var supplierDtos = suppliers.Select(s => new
         {
-            return NotFound();
+            id = s.SupplierId,
+            name = s.Name,
+            supplierType = s.SupplierType?.Name,
+            address = s.Address,
+            phone = s.Phone,
+            email = s.Email,
+            urlPage = s.UrlPage,
+            serviceType = s.ServiceType?.Name
+        }).ToList();
+
+        return Ok(new { message = "Supplier retrieved successfully", data = supplierDtos });
+    }
+    
+      [HttpGet("company/{id}/{supplierID}")]
+    public async Task<IActionResult> GetSupplierByCompanyAndId(int id, int supplierID)
+    {
+        if (id <= 0 || supplierID <= 0)
+        {
+            return BadRequest(new { message = "Invalid ID supplied or Bad request" });
         }
 
-        return supplier;
-    }
-    // GET: api/Suppliers/5
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Supplier>> GetSupplier(int id)
-    {
-        var supplier = await _context.Supplier.FindAsync(id);
+        var supplier = await _context.Supplier
+            .Include(s => s.SupplierType)
+            .Include(s => s.ServiceType)
+            .FirstOrDefaultAsync(s => s.CompanyId == id && s.SupplierId == supplierID);
 
         if (supplier == null)
         {
-            return NotFound();
+            return NotFound(new { message = "Supplier not found" });
         }
 
-        return supplier;
-    }
-
-// PUT: api/Suppliers/1
-[HttpPut("{companyId}/{supplierId}")]
-public async Task<IActionResult> PutSupplier(int companyId, int supplierId, [FromBody] Supplier supplier)
-{
-    if (companyId != supplier.CompanyId || supplierId != supplier.SupplierId)
-    {
-        return BadRequest("Company ID or Supplier ID in the request body does not match the URL");
-    }
-
-    var company = await _context.Company.FindAsync(companyId);
-    if (company == null)
-    {
-        return NotFound("Company not found");
-    }
-
-    var existingSupplier = await _context.Supplier.FindAsync(supplierId);
-    if (existingSupplier == null)
-    {
-        return NotFound("Supplier not found");
-    }
-
-        // Check if SupplierType already exists, if not, add it
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-        var existingSupplierType = _context.SupplierType.FirstOrDefault(st => st.Name == supplier.SupplierType.Name);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-        if (existingSupplierType == null)
-    {
-        supplier.SupplierType = null; // Remove SupplierType to prevent creation
-    }
-    else
-    {
-        supplier.SupplierTypeId = existingSupplierType.SupplierTypeId;
-        supplier.SupplierType = existingSupplierType;
-    }
-
-        // Check if ServiceType already exists, if not, add it
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-        var existingServiceType = _context.ServiceType.FirstOrDefault(st => st.Name == supplier.ServiceType.Name);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-        if (existingServiceType == null)
-    {
-        supplier.ServiceType = null; // Remove ServiceType to prevent creation
-    }
-    else
-    {
-        supplier.ServiceTypeId = existingServiceType.ServiceTypeId;
-        supplier.ServiceType = existingServiceType;
-    }
-
-
-    existingSupplier.Name = supplier.Name;
-    existingSupplier.Address = supplier.Address;
-    existingSupplier.Phone = supplier.Phone;
-    existingSupplier.Email = supplier.Email;
-    existingSupplier.UrlPage = supplier.UrlPage;
-
-
-    try
-    {
-        await _context.SaveChangesAsync();
-    }
-    catch (DbUpdateConcurrencyException)
-    {
-        if (!SupplierExists(supplierId))
+        var supplierDto = new
         {
-            return NotFound("Supplier not found");
-        }
-        else
-        {
-            throw;
-        }
+            id = supplier.SupplierId,
+            name = supplier.Name,
+            supplierType = supplier.SupplierType?.Name,
+            address = supplier.Address,
+            phone = supplier.Phone,
+            email = supplier.Email,
+            urlPage = supplier.UrlPage,
+            serviceType = supplier.ServiceType?.Name
+        };
+
+        return Ok(new { message = "Supplier retrieved successfully", data = new[] { supplierDto } });
     }
 
-    return NoContent();
-}
-
-
-
-   // POST: api/Suppliers/1
-    [HttpPost("{companyId}")]
-    public async Task<ActionResult<Supplier>> PostSupplier(int companyId, Supplier supplier)
+   [HttpPut("company/{id}")]
+    public async Task<IActionResult> UpdateSupplier(int id, [FromBody] SupplierUpdateDto supplierDto)
     {
-        var company = await _context.Company.FindAsync(companyId);
-        if (company == null)
+        if (id <= 0 || supplierDto.id <= 0)
         {
-            return NotFound("Company not found");
+            return BadRequest(new { message = "Invalid ID supplied or Bad request" });
         }
 
-       
-        supplier.CompanyId = companyId;
+        var existingSupplier = await _context.Supplier
+            .FirstOrDefaultAsync(s => s.CompanyId == id && s.SupplierId == supplierDto.id);
 
-
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-        var existingSupplierType = _context.SupplierType.FirstOrDefault(st => st.Name == supplier.SupplierType.Name);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-        if (existingSupplierType == null)
+        if (existingSupplier == null)
         {
-            supplier.SupplierType = null; // Remove SupplierType to prevent creation
-        }
-        else
-        {
-            supplier.SupplierTypeId = existingSupplierType.SupplierTypeId;
-            supplier.SupplierType = existingSupplierType;
+            return NotFound(new { message = "Supplier not found" });
         }
 
-        // Check if ServiceType already exists, if not, add it
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-        var existingServiceType = _context.ServiceType.FirstOrDefault(st => st.Name == supplier.ServiceType.Name);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-        if (existingServiceType == null)
+        var duplicateSupplier = await _context.Supplier
+            .FirstOrDefaultAsync(s => s.CompanyId == id && s.Name == supplierDto.name && s.SupplierId != supplierDto.id);
+
+        if (duplicateSupplier != null)
         {
-            supplier.ServiceType = null; // Remove ServiceType to prevent creation
-        }
-        else
-        {
-            supplier.ServiceTypeId = existingServiceType.ServiceTypeId;
-            supplier.ServiceType = existingServiceType;
+            return Conflict(new { message = "Conflict: Duplicate entry" });
         }
 
-        do
+        existingSupplier.Name = supplierDto.name;
+        existingSupplier.Address = supplierDto.address;
+        existingSupplier.Phone = supplierDto.phone;
+        existingSupplier.Email = supplierDto.email;
+        existingSupplier.UrlPage = supplierDto.urlPage;
+        
+        // Find and assign SupplierType
+        var supplierType = await _context.SupplierType.FirstOrDefaultAsync(st => st.Name == supplierDto.supplierType);
+        if (supplierType == null)
         {
-            // Generate a random, unique SupplierId
-            supplier.SupplierId = GenerateUniqueSupplierId();
-        } while (_context.Supplier.Any(e => e.SupplierId == supplier.SupplierId));
+            return BadRequest(new { message = "Invalid supplier type" });
+        }
+        existingSupplier.SupplierTypeId = supplierType.SupplierTypeId;
 
-        _context.Supplier.Add(supplier);
+        // Find and assign ServiceType
+        var serviceType = await _context.ServiceType.FirstOrDefaultAsync(st => st.Name == supplierDto.serviceType);
+        if (serviceType == null)
+        {
+            return BadRequest(new { message = "Invalid service type" });
+        }
+        existingSupplier.ServiceTypeId = serviceType.ServiceTypeId;
+
+        _context.Supplier.Update(existingSupplier);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetSupplier", new { id = supplier.SupplierId }, supplier);
+        return Ok(new { message = "Supplier updated successfully" });
     }
 
-// DELETE: api/Suppliers/1/2
-[HttpDelete("{companyId}/{supplierId}")]
-public async Task<ActionResult<Supplier>> DeleteSupplier(int companyId, int supplierId)
+    [HttpGet("supplierId/company/{id}")]
+    public async Task<IActionResult> GetValidSupplierId(int id)
+    {
+        var supplierId = await _context.Supplier.Where(s => s.CompanyId == id).Select(s => s.SupplierId).MaxAsync();
+        return Ok(new { message = "Code generated successfully", supplierId = supplierId + 1 });
+    }
+
+[HttpPost("company/{id}")]
+public async Task<IActionResult> AddSupplier(int id, [FromBody] SupplierCreateDto supplierDto)
 {
-    var company = await _context.Company.FindAsync(companyId);
-    if (company == null)
+    if (id <= 0)
     {
-        return NotFound("Company not found");
+        return BadRequest(new { message = "Invalid Company ID supplied or Bad request" });
     }
 
-    var supplier = await _context.Supplier.FindAsync(supplierId);
-    if (supplier == null)
+    var duplicateSupplier = await _context.Supplier
+        .FirstOrDefaultAsync(s => s.CompanyId == id && s.Name == supplierDto.name);
+
+    if (duplicateSupplier != null)
     {
-        return NotFound("Supplier not found");
+        return Conflict(new { message = "Conflict: Duplicate entry" });
     }
 
-    _context.Supplier.Remove(supplier);
+    var supplierType = await _context.SupplierType.FirstOrDefaultAsync(st => st.Name == supplierDto.supplierType);
+    if (supplierType == null)
+    {
+        return BadRequest(new { message = "Invalid supplier type" });
+    }
+
+    var serviceType = await _context.ServiceType.FirstOrDefaultAsync(st => st.Name == supplierDto.serviceType);
+    if (serviceType == null)
+    {
+        return BadRequest(new { message = "Invalid service type" });
+    }
+
+    var newSupplier = new Supplier
+    {
+        SupplierId = supplierDto.id, // Asignar el ID proporcionado
+        Name = supplierDto.name,
+        Address = supplierDto.address,
+        Phone = supplierDto.phone,
+        Email = supplierDto.email,
+        UrlPage = supplierDto.urlPage,
+        CompanyId = id,
+        SupplierTypeId = supplierType.SupplierTypeId,
+        ServiceTypeId = serviceType.ServiceTypeId
+    };
+
+    _context.Supplier.Add(newSupplier);
     await _context.SaveChangesAsync();
 
-    return supplier;
+    return Created("", new { message = "Supplier added successfully" });
 }
 
 
-    private bool SupplierExists(int id)
+
+     [HttpDelete("supplier/company/{id}/{supplierId}")]
+    public async Task<IActionResult> DeleteSupplier(int id, int supplierId)
     {
-        return _context.Supplier.Any(e => e.SupplierId == id);
+        if (id < 0 || supplierId < 0)
+        {
+            return BadRequest(new { message = "Invalid ID supplied" });
+        }
+
+        var supplier = await _context.Supplier
+            .FirstOrDefaultAsync(s => s.CompanyId == id && s.SupplierId == supplierId);
+
+        if (supplier == null)
+        {
+            return NotFound(new { message = "Supplier not found" });
+        }
+
+        _context.Supplier.Remove(supplier);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
-
-private int GenerateUniqueSupplierId()
-{
-    int newId;
-    do
-    {
-
-        newId = new Random().Next(1, int.MaxValue); 
-    } while (_context.Supplier.Any(e => e.SupplierId == newId));
-
-    return newId;
-}
-
 
 }

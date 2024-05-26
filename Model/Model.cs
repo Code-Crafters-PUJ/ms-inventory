@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+// Branch.cs
 public class Branch
 {
-
     [Key]
     public int BranchId { get; set; }
 
@@ -14,15 +14,14 @@ public class Branch
     [StringLength(45)]
     public string? Address { get; set; }
 
+    [Required]
+    public bool Enabled { get; set; } 
+
     public int CompanyId { get; set; }
 
-  
-    public static implicit operator Branch(List<Branch> v)
-    {
-        throw new NotImplementedException();
-    }
+    // Navigation property
+    public ICollection<BranchHasProduct> BranchHasProducts { get; set; } = new List<BranchHasProduct>();
 }
-
 
 // Product.cs
 public class Product
@@ -32,10 +31,10 @@ public class Product
 
     [Required]
     [StringLength(45)]
-    public string ?Name { get; set; }
+    public string? Name { get; set; }
 
     [StringLength(45)]
-    public string ?Description { get; set; }
+    public string? Description { get; set; }
 
     [Required]
     public double CostPrice { get; set; }
@@ -47,7 +46,65 @@ public class Product
 
     [ForeignKey("CategoryId")]
     public Category? Category { get; set; }
+
+    // Navigation property
+    public ICollection<BranchHasProduct> BranchHasProducts { get; set; } = new List<BranchHasProduct>();
 }
+
+// BranchHasProduct.cs
+public class BranchHasProduct
+{
+    [Key, Column(Order = 1)]
+    public int BranchId { get; set; }
+
+    [Key, Column(Order = 2)]
+    public int ProductId { get; set; }
+
+    [ForeignKey("BranchId")]
+    public Branch? Branch { get; set; }
+
+    [ForeignKey("ProductId")]
+    public Product? Product { get; set; }
+
+    [Required]
+    public int Quantity { get; set; }
+
+    [Required]
+    [Range(0, 999)]
+    public int Discount { get; set; }
+}
+
+// ProductHasSupplier.cs
+public class ProductHasSupplier
+{
+    [Key, Column(Order = 1)]
+    public int ProductId { get; set; }
+
+    [Key, Column(Order = 2)]
+    public int SupplierId { get; set; }
+
+    [Key, Column(Order = 3)]
+    public DateTime PurchaseDate { get; set; }
+
+    [Key, Column(Order = 4)]
+    public double CostPrice { get; set; }
+
+    [Key, Column(Order = 5)]
+    public int Quantity { get; set; }
+
+    [Key, Column(Order = 6)]
+    public int OrderId { get; set; }
+
+    [Key, Column(Order = 7)]
+    public int BranchId { get; set; }
+
+    [ForeignKey("ProductId")]
+    public Product? Product { get; set; }
+
+    [ForeignKey("SupplierId")]
+    public Supplier? Supplier { get; set; }
+}
+
 
 // Category.cs
 public class Category
@@ -115,70 +172,6 @@ public class ServiceType
     [Required]
     [StringLength(45)]
     public string ?Name { get; set; }
-}
-
-// BranchHasProduct.cs
-public class BranchHasProduct
-{
-    [Key]
-    [Column(Order = 1)]
-    public int BranchId { get; set; }
-
-    [Key]
-    [Column(Order = 2)]
-    public int ProductId { get; set; }
-
-    [ForeignKey("BranchId")]
-    public Branch ?Branch { get; set; }
-
-    [ForeignKey("ProductId")]
-    public Product ?Product { get; set; }
-
-    [Required]
-    public int Quantity { get; set; }
-
-    [Required]
-    [Range(0, 999)]
-    public int Discount { get; set; }
-}
-
-// ProductHasSupplier.cs
-public class ProductHasSupplier
-{
-    [Key]
-    [Column(Order = 1)]
-    public int ProductId { get; set; }
-
-    [Key]
-    [Column(Order = 2)]
-    public int SupplierId { get; set; }
-
-    [Key]
-    [Column(Order = 3)]
-    public DateTime PurchaseDate { get; set; }
-    [Key]
-    [Column(Order = 4)]
-    public DateTime costPrice { get; set; }
-
-        [Key]
-    [Column(Order = 5)]
-    public DateTime quantity { get; set; }
-
-    [Key]
-    [Column(Order = 6)]
-    public DateTime OrderId { get; set; }
-
-    [Key]
-    [Column(Order = 7)]
-    public DateTime BranchId { get; set; }
-
-    [ForeignKey("ProductId")]
-    public Product ?Product { get; set; }
-
-    [ForeignKey("SupplierId")]
-    public Supplier ?Supplier { get; set; }
-
-
 }
 
 // Company.cs
