@@ -2,9 +2,9 @@ POST  https://localhost:7071/api/Supplier/company/1
 Content-Type: application/json
 
 {
-  "id": 603212217,
-  "name": "nombre",
-  "supplierType": "0",
+  "id": 603123,
+  "name": "nombre888",
+  "supplierType": "persona",
   "address": "string",
   "phone": "string",
   "email": "string",
