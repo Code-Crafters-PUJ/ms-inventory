@@ -144,13 +144,19 @@ public async Task<IActionResult> AddSupplier(int id, [FromBody] SupplierCreateDt
         return Conflict(new { message = "Conflict: Duplicate entry" });
     }
 
-    var supplierType = await _context.SupplierType.FirstOrDefaultAsync(st => st.Name == supplierDto.supplierType);
+    var validSupplierTypes = new List<string> { "persona", "empresa", "organizacion", "fundacion" };
+    if (!validSupplierTypes.Contains(supplierDto.supplierType.ToLower()))
+    {
+        return BadRequest(new { message = "Invalid supplier type" });
+    }
+
+    var supplierType = await _context.SupplierType.FirstOrDefaultAsync(st => st.Name.ToLower() == supplierDto.supplierType.ToLower());
     if (supplierType == null)
     {
         return BadRequest(new { message = "Invalid supplier type" });
     }
 
-    var serviceType = await _context.ServiceType.FirstOrDefaultAsync(st => st.Name == supplierDto.serviceType);
+    var serviceType = await _context.ServiceType.FirstOrDefaultAsync(st => st.Name.ToLower() == supplierDto.serviceType.ToLower());
     if (serviceType == null)
     {
         return BadRequest(new { message = "Invalid service type" });
@@ -158,7 +164,7 @@ public async Task<IActionResult> AddSupplier(int id, [FromBody] SupplierCreateDt
 
     var newSupplier = new Supplier
     {
-        SupplierId = supplierDto.id, // Asignar el ID proporcionado
+        SupplierId = supplierDto.id,
         Name = supplierDto.name,
         Address = supplierDto.address,
         Phone = supplierDto.phone,
@@ -174,6 +180,7 @@ public async Task<IActionResult> AddSupplier(int id, [FromBody] SupplierCreateDt
 
     return Created("", new { message = "Supplier added successfully" });
 }
+
 
 
 

@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Supplier>()
             .Property(s => s.SupplierId)
             .ValueGeneratedNever(); // Esto permite que el ID sea asignado manualmente
+
     }
 
 }

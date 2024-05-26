@@ -1,10 +1,10 @@
-GET  https://localhost:7071/api/Supplier/company/1
+POST  https://localhost:7071/api/Supplier/company/1
 Content-Type: application/json
 
 {
   "id": 603212217,
   "name": "nombre",
-  "supplierType": "Proveedor de productos",
+  "supplierType": "0",
   "address": "string",
   "phone": "string",
   "email": "string",
