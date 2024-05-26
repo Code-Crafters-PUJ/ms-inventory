@@ -150,18 +150,19 @@ public async Task<IActionResult> AddSupplier(int id, [FromBody] SupplierCreateDt
         return BadRequest(new { message = "Invalid supplier type" });
     }
 
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-        var supplierType = await _context.SupplierType.FirstOrDefaultAsync(st => st.Name.ToLower() == supplierDto.supplierType.ToLower());
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-        if (supplierType == null)
+    var supplierType = await _context.SupplierType
+        .FirstOrDefaultAsync(st => st.Name.ToLower() == supplierDto.supplierType.ToLower());
+    if (supplierType == null)
     {
         return BadRequest(new { message = "Invalid supplier type" });
     }
 
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-        var serviceType = await _context.ServiceType.FirstOrDefaultAsync(st => st.Name.ToLower() == supplierDto.serviceType.ToLower());
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-
+    var serviceType = await _context.ServiceType
+        .FirstOrDefaultAsync(st => st.Name.ToLower() == supplierDto.serviceType.ToLower());
+    if (serviceType == null)
+    {
+        return BadRequest(new { message = "Invalid service type" });
+    }
 
     var newSupplier = new Supplier
     {
@@ -181,7 +182,6 @@ public async Task<IActionResult> AddSupplier(int id, [FromBody] SupplierCreateDt
 
     return Created("", new { message = "Supplier added successfully" });
 }
-
 
 
 
