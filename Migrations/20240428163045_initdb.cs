@@ -33,7 +33,8 @@ namespace ms_inventary.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     NIT = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false),
                     businessArea = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false),
-                    employeeNumber = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false)
+                    employeeNumber = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false),
+                    Name = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false)
                 },
                 constraints: table =>
                 {

@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,7 +9,7 @@ public class Branch
 {
     [Key]
 
-    public string? BranchId { get; set; }
+    public int BranchId { get; set; }
 
   
     [Required]
@@ -24,6 +23,8 @@ public class Branch
 
 
     public int CompanyId { get; set; }
+
+    public bool Enabled { get; set; } = true;
 
     // Navigation property
     public ICollection<BranchHasProduct> BranchHasProducts { get; set; } = new List<BranchHasProduct>();
@@ -62,7 +63,7 @@ public class Product
 public class BranchHasProduct
 {
     [Key, Column(Order = 1)]
-    public string? BranchId { get; set; }
+    public int BranchId { get; set; }
 
     [Key, Column(Order = 2)]
     public int ProductId { get; set; }
@@ -103,7 +104,7 @@ public class ProductHasSupplier
     public int OrderId { get; set; }
 
     [Key, Column(Order = 7)]
-    public string? BranchId { get; set; }
+    public int BranchId { get; set; }
 
     [ForeignKey("ProductId")]
     public Product? Product { get; set; }

@@ -6,9 +6,10 @@ public class RabbitMQHelper
     {
         var factory = new ConnectionFactory()
         {
-            HostName = hostname,
-            UserName = username,
-            Password = password
+            HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOSTNAME") ?? "localhost",
+            UserName = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME") ?? "guest",
+            Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD") ?? "guest",
+            Port = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT") ?? "5672")
         };
         return factory.CreateConnection();
     }

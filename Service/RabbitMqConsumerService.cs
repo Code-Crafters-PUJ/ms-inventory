@@ -21,10 +21,10 @@ public class RabbitMqConsumerService : BackgroundService
 
         var factory = new ConnectionFactory()
         {
-            HostName = "10.147.17.214",
-            Port = 5672,
-            UserName = "prueba",
-            Password = "123"
+            HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOSTNAME") ?? "localhost",
+            UserName = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME") ?? "guest",
+            Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD") ?? "guest",
+            Port = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT") ?? "5672"),
         };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
@@ -152,7 +152,7 @@ public class RabbitMqConsumerService : BackgroundService
                     branch.Address = value;
                     break;
                 case "NIT":
-                    branch.BranchId = value;
+                    branch.BranchId = int.Parse(value);
                     break;
                 case "CompanyId":
                     if (int.TryParse(value, out int companyId))

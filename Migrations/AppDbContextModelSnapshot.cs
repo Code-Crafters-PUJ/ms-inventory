@@ -16,7 +16,7 @@ namespace ms_inventary.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.5")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -37,6 +37,9 @@ namespace ms_inventary.Migrations
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(45)
@@ -44,7 +47,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("BranchId");
 
-                    b.ToTable("Branch", (string)null);
+                    b.ToTable("Branch");
                 });
 
             modelBuilder.Entity("BranchHasProduct", b =>
@@ -67,7 +70,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("BranchHasProduct", (string)null);
+                    b.ToTable("BranchHasProduct");
                 });
 
             modelBuilder.Entity("Category", b =>
@@ -85,7 +88,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Category", (string)null);
+                    b.ToTable("Category");
                 });
 
             modelBuilder.Entity("Company", b =>
@@ -111,7 +114,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("CompanyId");
 
-                    b.ToTable("Company", (string)null);
+                    b.ToTable("Company");
                 });
 
             modelBuilder.Entity("Product", b =>
@@ -144,7 +147,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Product", (string)null);
+                    b.ToTable("Product");
                 });
 
             modelBuilder.Entity("ProductHasSupplier", b =>
@@ -181,7 +184,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("ProductHasSupplier", (string)null);
+                    b.ToTable("ProductHasSupplier");
                 });
 
             modelBuilder.Entity("ServiceType", b =>
@@ -199,7 +202,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("ServiceTypeId");
 
-                    b.ToTable("ServiceType", (string)null);
+                    b.ToTable("ServiceType");
                 });
 
             modelBuilder.Entity("Supplier", b =>
@@ -243,7 +246,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("SupplierTypeId");
 
-                    b.ToTable("Supplier", (string)null);
+                    b.ToTable("Supplier");
                 });
 
             modelBuilder.Entity("SupplierType", b =>
@@ -261,7 +264,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("SupplierTypeId");
 
-                    b.ToTable("SupplierType", (string)null);
+                    b.ToTable("SupplierType");
                 });
 
             modelBuilder.Entity("BranchHasProduct", b =>

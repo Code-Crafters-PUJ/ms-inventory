@@ -1,6 +1,8 @@
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.AspNetCore.Http.StatusCodes;
+using Microsoft.Extensions.DependencyInjection;
+
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,28 +21,22 @@ var connectionString = $"Server={postgresHost};Port={port};Database={postgresDb}
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Configurar el registro
-builder.Services.AddLogging(logging =>
-{
-    logging.ClearProviders();
-    logging.AddConsole();
-});
-
-// Configurar RabbitMQ
-builder.Services.AddHostedService<RabbitMqConsumerService>();
-
-// Configurar servicios para endpoints y Swagger
+// Configure services for endpoints and Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
-// Add controllers
 builder.Services.AddControllers();
+
+// Agregar el consumidor al contenedor de servicios
+builder.Services.AddSingleton<BranchProductQuantityUpdateConsumer>();
+
+builder.Services.AddSingleton<CompanyCreateUpdateConsumer>();
+
+builder.Services.AddSingleton<BranchCreateUpdateConsumer>();
 
 
 var app = builder.Build();
 
-// Configurar el pipeline de solicitud HTTP
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -50,14 +46,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Mapear endpoints a controladores
+// Map endpoints to controllers
 app.MapControllers();
 
 // Iniciar el consumidor
 using (var scope = app.Services.CreateScope())
 {
-    var consumer = scope.ServiceProvider.GetRequiredService<BranchProductQuantityUpdateConsumer>();
-    consumer.StartListening();
+    var consumerQuantity = scope.ServiceProvider.GetRequiredService<BranchProductQuantityUpdateConsumer>();
+    consumerQuantity.StartListening();
+    var consumerCompany = scope.ServiceProvider.GetRequiredService<CompanyCreateUpdateConsumer>();
+    consumerCompany.StartListening();
+    var consumerBranch = scope.ServiceProvider.GetRequiredService<BranchCreateUpdateConsumer>();
+    consumerBranch.StartListening();
+    
 }
 
 app.Run();

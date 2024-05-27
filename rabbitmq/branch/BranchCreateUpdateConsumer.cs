@@ -6,13 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
-public class BranchProductQuantityUpdateConsumer
+public class BranchCreateUpdateConsumer
 {
     private readonly IConnection _connection;
     private readonly IModel _channel;
     private readonly IServiceProvider _serviceProvider;
 
-    public BranchProductQuantityUpdateConsumer(IServiceProvider serviceProvider)
+    public BranchCreateUpdateConsumer(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
 
@@ -30,7 +30,7 @@ public class BranchProductQuantityUpdateConsumer
 
     public void StartListening()
     {
-        _channel.QueueDeclare(queue: "branch-product-quantity-update-queue",
+        _channel.QueueDeclare(queue: "branch_queue",
                               durable: true,
                               exclusive: false,
                               autoDelete: false,
@@ -42,54 +42,63 @@ public class BranchProductQuantityUpdateConsumer
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
 
-            Console.WriteLine($" [x] Received {message}");
+            Console.WriteLine($"[x] Received {message}");
 
             await ProcessMessage(message);
         };
 
-        _channel.BasicConsume(queue: "branch-product-quantity-update-queue",
+        _channel.BasicConsume(queue: "branch_queue",
                               autoAck: true,
                               consumer: consumer);
 
-        Console.WriteLine(" Press [enter] to exit.");
+        Console.WriteLine("Press [enter] to exit.");
     }
 
     private async Task ProcessMessage(string message)
     {
         var parts = message.Split(',');
-        if (parts.Length == 3)
+        if (parts.Length == 4)
         {
-            var productId = Convert.ToInt64(parts[0].Trim());
-            var branchId = Convert.ToInt64(parts[1].Trim());
-            var newQuantity = Convert.ToInt32(parts[2].Trim());
+            var name = parts[0].Split(':')[1].Trim();
+            var address = parts[1].Split(':')[1].Trim();
+            var NIT = parts[2].Split(':')[1].Trim();
+            var CompanyId = Convert.ToInt32(parts[3].Split(':')[1].Trim());
 
-            Console.WriteLine($"Processing message: ProductId={productId}, BranchId={branchId}, NewQuantity={newQuantity}");
+            Console.WriteLine($"Processing message: Name={name}, Address={address}, NIT={NIT}, CompanyId={CompanyId}");
 
             try
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                    var branchProductRelation = await context.BranchHasProduct
-                        .FirstOrDefaultAsync(bhp => bhp.ProductId == productId && bhp.BranchId == branchId);
+                    var branch = await dbContext.Branch.FirstOrDefaultAsync(b => b.Name == name && b.CompanyId == CompanyId);
 
-                    if (branchProductRelation != null)
+                    if (branch == null)
                     {
-                        Console.WriteLine("Relation found. Updating quantity...");
-                        branchProductRelation.Quantity = newQuantity;
-                        await context.SaveChangesAsync();
-                        Console.WriteLine("Database updated successfully.");
+                        branch = new Branch
+                        {
+                            Name = name,
+                            Address = address,
+                            CompanyId = CompanyId,
+                            Enabled = true
+                        };
+
+                        dbContext.Branch.Add(branch);
                     }
                     else
                     {
-                        Console.WriteLine($"No relation found for ProductId={productId} and BranchId={branchId}");
+                        branch.Name = name;
+                        branch.Address = address;
+                        branch.Enabled = true;
                     }
+
+                    await dbContext.SaveChangesAsync();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating product quantity: {ex.Message}");
+                Console.WriteLine($"Error updating branch: {ex.Message}");
             }
         }
         else
