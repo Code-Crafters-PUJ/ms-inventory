@@ -10,10 +10,10 @@ class ProductCreateUpdateProducer
     {
         var factory = new ConnectionFactory
         {
-            HostName = "localhost",
-            UserName = "guest",
-            Password = "guest",
-            Port = 5672
+            HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOSTNAME") ?? "localhost",
+            UserName = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME") ?? "guest",
+            Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD") ?? "guest",
+            Port = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT") ?? "5672")
         };
 
         try
