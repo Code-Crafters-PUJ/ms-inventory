@@ -1,13 +1,23 @@
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using static Microsoft.AspNetCore.Http.StatusCodes;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var Configuration = builder.Configuration;
+
+// Obtener las variables de entorno
+var postgresHost = Environment.GetEnvironmentVariable("POSTGRES_HOST");
+var port = Environment.GetEnvironmentVariable("POSTGRES_PORT");
+var postgresDb = Environment.GetEnvironmentVariable("POSTGRES_DB");
+var postgresUser = Environment.GetEnvironmentVariable("POSTGRES_USER");
+var postgresPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+
+// Configurar la cadena de conexión utilizando las variables de entorno
+var connectionString = $"Server={postgresHost};Port={port};Database={postgresDb};Username={postgresUser};Password={postgresPassword}";
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Configurar el registro
 builder.Services.AddLogging(logging =>
@@ -23,8 +33,10 @@ builder.Services.AddHostedService<RabbitMqConsumerService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Añadir controladores
+
+// Add controllers
 builder.Services.AddControllers();
+
 
 var app = builder.Build();
 
@@ -40,5 +52,12 @@ app.UseHttpsRedirection();
 
 // Mapear endpoints a controladores
 app.MapControllers();
+
+// Iniciar el consumidor
+using (var scope = app.Services.CreateScope())
+{
+    var consumer = scope.ServiceProvider.GetRequiredService<BranchProductQuantityUpdateConsumer>();
+    consumer.StartListening();
+}
 
 app.Run();
