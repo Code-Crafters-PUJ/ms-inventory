@@ -83,6 +83,18 @@ public async Task<IActionResult> CreateProductForCompany(int id, [FromBody] Prod
     _context.Product.Add(product);
     await _context.SaveChangesAsync();
 
+                        var productRMQDTO = new ProductRMQDTO
+                {
+                    id = product.ProductId,
+                    name = productDto.Name,
+                    description = productDto.Description,
+                    salePrice = productDto.SalePrice,
+                    categoryId = category.CategoryId
+                };
+
+                ProductCreateUpdateProducer publisher = new ProductCreateUpdateProducer();
+                await publisher.PublishMessage(productRMQDTO);
+
     foreach (var branchDto in productDto.Branches)
     {
         var branch = await _context.Branch.FirstOrDefaultAsync(b => b.Name == branchDto.BranchName && b.CompanyId == id);
@@ -98,6 +110,16 @@ public async Task<IActionResult> CreateProductForCompany(int id, [FromBody] Prod
         };
 
         _context.BranchHasProduct.Add(branchProduct);
+
+        var branchProductRMQDTO = new BranchProductRMQDTO
+        {
+            branchId = branch.BranchId,
+            productId = product.ProductId,
+            quantity = branchDto.Quantity,
+            discount = branchDto.Discount
+        };
+        BranchProductCreateUpdateProducer publisherBP = new BranchProductCreateUpdateProducer();
+        await publisherBP.PublishMessage(branchProductRMQDTO);
     }
 
     await _context.SaveChangesAsync();
@@ -163,6 +185,18 @@ public async Task<IActionResult> UpdateProduct(int id, int productId, [FromBody]
     var existingBranchProducts = await _context.BranchHasProduct.Where(bp => bp.ProductId == productId).ToListAsync();
     _context.BranchHasProduct.RemoveRange(existingBranchProducts);
 
+                            var productRMQDTO = new ProductRMQDTO
+                {
+                    id = product.ProductId,
+                    name = productDto.Name,
+                    description = productDto.Description,
+                    salePrice = productDto.SalePrice,
+                    categoryId = category.CategoryId
+                };
+
+                ProductCreateUpdateProducer publisher = new ProductCreateUpdateProducer();
+                await publisher.PublishMessage(productRMQDTO);
+
     foreach (var branchDto in productDto.Branches)
     {
         var branch = await _context.Branch.FirstOrDefaultAsync(b => b.Name == branchDto.BranchName && b.CompanyId == id);
@@ -178,6 +212,17 @@ public async Task<IActionResult> UpdateProduct(int id, int productId, [FromBody]
         };
 
         _context.BranchHasProduct.Add(branchProduct);
+
+        
+        var branchProductRMQDTO = new BranchProductRMQDTO
+        {
+            branchId = branch.BranchId,
+            productId = product.ProductId,
+            quantity = branchDto.Quantity,
+            discount = branchDto.Discount
+        };
+        BranchProductCreateUpdateProducer publisherBP = new BranchProductCreateUpdateProducer();
+        await publisherBP.PublishMessage(branchProductRMQDTO);
     }
 
     await _context.SaveChangesAsync();
