@@ -1,9 +1,9 @@
-POST  https://localhost:7071/api/Supplier/company/1
+GET  https://localhost:7071/api/Product/branches/company/8
 Content-Type: application/json
 
 {
-  "id": 60312,
-  "name": "nombre8",
+  "id": 56743,
+  "name": "njj8",
   "supplierType": "persona",
   "address": "string",
   "phone": "string",

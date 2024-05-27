@@ -22,7 +22,6 @@ public async Task<IActionResult> GetBranchesByCompanyId(int id)
         {
             id = b.BranchId,
             name = b.Name,
-            enabled = b.Enabled,
             products = b.BranchHasProducts.Select(bp => new 
             {
                 product = new 

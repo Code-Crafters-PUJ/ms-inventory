@@ -1,25 +1,34 @@
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.AspNetCore.Http.StatusCodes;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 var Configuration = builder.Configuration;
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure services for endpoints and Swagger
+// Configurar el registro
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+});
+
+// Configurar RabbitMQ
+builder.Services.AddHostedService<RabbitMqConsumerService>();
+
+// Configurar servicios para endpoints y Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-// Add controllers
+// Añadir controladores
 builder.Services.AddControllers();
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Configurar el pipeline de solicitud HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -27,13 +36,9 @@ if (app.Environment.IsDevelopment())
     app.UseCors("AllowAll");
 }
 
-
-
 app.UseHttpsRedirection();
 
-// Map endpoints to controllers
+// Mapear endpoints a controladores
 app.MapControllers();
 
 app.Run();
-
-

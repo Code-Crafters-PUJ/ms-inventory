@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ms_inventary.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240527012953_prueba2605")]
+    partial class prueba2605
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,7 +47,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("BranchId");
 
-                    b.ToTable("Branch", (string)null);
+                    b.ToTable("Branch");
                 });
 
             modelBuilder.Entity("BranchHasProduct", b =>
@@ -67,7 +70,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("BranchHasProduct", (string)null);
+                    b.ToTable("BranchHasProduct");
                 });
 
             modelBuilder.Entity("Category", b =>
@@ -85,7 +88,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Category", (string)null);
+                    b.ToTable("Category");
                 });
 
             modelBuilder.Entity("Company", b =>
@@ -111,7 +114,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("CompanyId");
 
-                    b.ToTable("Company", (string)null);
+                    b.ToTable("Company");
                 });
 
             modelBuilder.Entity("Product", b =>
@@ -144,7 +147,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Product", (string)null);
+                    b.ToTable("Product");
                 });
 
             modelBuilder.Entity("ProductHasSupplier", b =>
@@ -181,7 +184,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("ProductHasSupplier", (string)null);
+                    b.ToTable("ProductHasSupplier");
                 });
 
             modelBuilder.Entity("ServiceType", b =>
@@ -199,7 +202,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("ServiceTypeId");
 
-                    b.ToTable("ServiceType", (string)null);
+                    b.ToTable("ServiceType");
                 });
 
             modelBuilder.Entity("Supplier", b =>
@@ -243,7 +246,7 @@ namespace ms_inventary.Migrations
 
                     b.HasIndex("SupplierTypeId");
 
-                    b.ToTable("Supplier", (string)null);
+                    b.ToTable("Supplier");
                 });
 
             modelBuilder.Entity("SupplierType", b =>
@@ -261,7 +264,7 @@ namespace ms_inventary.Migrations
 
                     b.HasKey("SupplierTypeId");
 
-                    b.ToTable("SupplierType", (string)null);
+                    b.ToTable("SupplierType");
                 });
 
             modelBuilder.Entity("BranchHasProduct", b =>

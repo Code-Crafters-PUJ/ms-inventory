@@ -1,27 +1,34 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 // Branch.cs
 public class Branch
 {
     [Key]
-    public int BranchId { get; set; }
 
+    public string? BranchId { get; set; }
+
+  
     [Required]
     [StringLength(45)]
     public string? Name { get; set; }
+
 
     [Required]
     [StringLength(45)]
     public string? Address { get; set; }
 
-    [Required]
-    public bool Enabled { get; set; } 
 
     public int CompanyId { get; set; }
 
     // Navigation property
     public ICollection<BranchHasProduct> BranchHasProducts { get; set; } = new List<BranchHasProduct>();
 }
+
 
 // Product.cs
 public class Product
@@ -55,7 +62,7 @@ public class Product
 public class BranchHasProduct
 {
     [Key, Column(Order = 1)]
-    public int BranchId { get; set; }
+    public string? BranchId { get; set; }
 
     [Key, Column(Order = 2)]
     public int ProductId { get; set; }
@@ -96,7 +103,7 @@ public class ProductHasSupplier
     public int OrderId { get; set; }
 
     [Key, Column(Order = 7)]
-    public int BranchId { get; set; }
+    public string? BranchId { get; set; }
 
     [ForeignKey("ProductId")]
     public Product? Product { get; set; }
@@ -177,12 +184,18 @@ public class ServiceType
 // Company.cs
 public class Company
 {
+ 
+
     [Key]
     public int CompanyId { get; set; }
 
     [Required]
     [StringLength(45)]
     public string ?NIT { get; set; }
+   
+   [Required]
+    [StringLength(45)]
+    public string ?Name { get; set; }
 
     [StringLength(45)]
     public string? businessArea { get; set; }
